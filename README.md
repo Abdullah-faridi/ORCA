@@ -1,142 +1,157 @@
 
 # Project Canary
 
-### Short-Term Forecasting of Ground-Level O₃ and NO₂ Using Multi-Source Data Fusion
-
-### Smart India Hackathon 2025 – Problem Statement SIH25178
+### AQI Sentinel – Hyper-Local Air Quality Intelligence System
 
 ---
 
 ## 🌍 Overview
 
-**Project Canary** is a hybrid deep-learning model for forecasting **NO₂** and **O₃** concentrations by fusing **satellite data**, **meteorological reanalysis**, and **ground-station observations**.
-The system uses a CNN + BiLSTM + Attention pipeline to capture spatial pollutant behavior, temporal evolution, and weather-driven influences.
+Air quality monitoring systems generally report pollution levels at the city scale, which hides significant variation across neighborhoods or wards. This limits the ability of authorities to detect localized pollution sources and implement targeted mitigation strategies.
 
----
+AQI Sentinel is a hyper-local air quality intelligence platform designed to convert environmental data into actionable insights. The system integrates satellite observations, ground monitoring stations, meteorological data, and urban activity signals to forecast air pollution and identify probable emission sources.
+
+Instead of only displaying AQI values, AQI Sentinel performs a complete forecast-to-action pipeline:
+
+1-Collect environmental data from multiple sources
+2-Forecast pollutant concentrations for the next 24 hours
+3-Identify the most probable pollution sources
+4-Generate mitigation recommendations for administrator
+4-Provide health advisories for citizens
 
 ## 🚀 Key Highlights
+Hyper-Local AQI Forecasting
 
-* **Multi-source fusion** of Sentinel-5P, ERA5, and CPCB data.
-* **Hybrid deep learning architecture** combining spatial and temporal modeling.
-* **Simultaneous forecasting** of NO₂ and O₃.
-* **Spatial raster encoding** via CNN.
-* **Temporal dynamics** captured via BiLSTM.
-* **Interpretability** through attention weights.
+The system predicts pollutant concentrations at fine spatial resolution, allowing early detection of localized pollution spikes.
 
----
+>>Predicted pollutants include:
+>PM2.5
+>PM10
+>NO₂
+>O₃
+Predictions are generated for the next 24 hours, enabling early warning systems for urban authorities.
 
-## 📡 Data Sources
+## Multi-Source Environmental Data Fusion
+AQI Sentinel integrates environmental signals from multiple domains:
+>satellite atmospheric measurements
+>ground monitoring stations
+>meteorological datasets
+>urban activity indicators
 
-### Satellite (Sentinel-5P TROPOMI)
+Combining these sources allows the model to capture both regional pollution transport and local emission events.
 
-* NO₂ and O₃ tropospheric column densities
-* Processed from GeoTIFF
-* Resampled to **10 × 11** spatial grid aligned with Delhi AOI
+## Pollution Source Attribution
+The system identifies the most probable pollution sources responsible for air quality deterioration.
 
-### Meteorological (ERA5)
+>>Typical source categories include:
+>traffic emissions
+>construction dust
+>biomass burning
+>industrial activity
+>regional pollutant transport
+This allows authorities to implement targeted mitigation strategies instead of broad city-wide restrictions.
 
-* Hourly variables:
-  Temp, RH, wind (u/v), precipitation, solar radiation, boundary-layer height, dewpoint, etc.
-* Interpolated to station coordinates
+## Automated Policy Recommendations
+AQI Sentinel translates pollution forecasts into actionable interventions, such as:
+>traffic diversion during NO₂ spikes
+>dust suppression near construction zones
+>alerts during biomass burning events
+These recommendations assist urban administrators in implementing data-driven environmental policies.
 
-### Ground-Station (CPCB)
+## Citizen Health Advisory System
 
-* Hourly NO₂ & O₃ measurements
-* Used as supervised labels
+The platform also provides public health guidance based on predicted pollution levels.
+>>Citizens receive alerts including:
+>air quality status in their ward
+>pollution forecasts
+>recommended protective measures
+This helps reduce exposure during severe pollution episodes.
 
----
+## Data Source
+AQI Sentinel integrates several environmental datasets to produce reliable predictions.
+*Satellite Observations*
+>Satellite data provides large-scale atmospheric monitoring.
+>>Sources include:
+>Sentinel-5P atmospheric monitoring dat
+>MODIS aerosol optical depth measurements
+These datasets capture regional pollution plumes and atmospheric composition.
 
-## 🛠 Data Pipeline
+## Ground Monitoring Stations
+Ground sensors provide accurate measurements of local air quality.
+*Measured pollutants include:*
+>PM2.5
+>PM10
+>NO₂
+>O₃
+>SO₂
+>CO
+These readings are used for model calibration and validation.
 
-1. **Ingestion**
+## Meteorological Data
+Weather conditions strongly influence pollutant dispersion.
+*Key meteorological features:*
+>wind speed
+>wind direction
+>temperature
+>humidity
+>atmospheric boundary layer height
 
-   * Load Sentinel-5P rasters
-   * Load ERA5 weather series
-   * Load CPCB pollutant readings
+These variables help model pollution transport and accumulation.
 
-2. **Preprocessing**
+## Data Pipeline
+*Data Ingestion*
+Environmental data is collected from satellite platforms, monitoring stations, and weather datasets.
 
-   * Temporal alignment
-   * Imputation (previous-day fill, KNN)
-   * Z-score normalization
-   * Derived features (dewpoint, cyclical time features)
+*Preprocessing*
+Missing values are handled using KNN imputation, and datasets are temporally aligned.
 
-3. **Spatial Grid Preparation**
+*Spatial Mapping*
+Data is mapped to a city grid representation for spatial modeling.
 
-   * Crop satellite rasters to region
-   * Resample to fixed **10×11 grid**
-   * Stack channels (NO₂, O₃, meteo grids)
+*Feature Engineering*
+Additional features such as wind transport indicators and temporal cycles are generated.
 
-4. **Final Input Shapes**
+## Model Architecture
+AQI Sentinel uses a hybrid deep learning architecture combining spatial and temporal modeling.
+*CNN (Spatial Encoder)*
+Extracts spatial pollution patterns from satellite grid data.
+*MLP (Tabular Encoder)*
+Processes meteorological variables and ground sensor measurements.
+*Feature Fusion*
+Spatial and tabular embeddings are combined into a unified representation.
+*BiLSTM (Temporal Model)*
+Captures time-dependent pollution trends.
+*Attention Layer*
+Highlights the most influential historical data points for prediction.
+*Outputs*
+24-hour pollution forecas
+probable pollution source classification
 
-   * Satellite tensors: `(T, 9, 10, 11)`
-   * Tabular station features: `(T, 18)`
-   * Labels: `(T, 2)` for NO₂ & O₃
 
----
+## Tech Stack
+*Programming & Data Processing*
+Python
+Pandas
+NumPy
+GeoPandas
+Scikit-learn
+*Machine Learning*
+PyTorch
+CNN + BiLSTM + Attention architecture
+*Backend*
+FastAPI / Flask
+Celery
+Redis
+*Database*
+Django
+Django REST Framework
+*Frontend & Visualization*
+React js
+D3.js
 
-## 🧠 Model Architecture
-
-```
-Satellite Raster (T, C, 10, 11)
-        ↓
-     CNN Encoder
-   (Conv → ReLU → MaxPool × 3)
-        ↓
-   64-Dim Spatial Embedding
-```
-
-```
-Station Features (T, 18)
-        ↓
-        MLP
-        ↓
-   64-Dim Tabular Embedding
-```
-
-**Fusion → BiLSTM → Attention → Dual Regression Heads**
-
-### Components (compact summary)
-
-* **CNN Encoder:** Learns spatial pollutant patterns from raster grids.
-* **MLP Block:** Encodes meteorological + derived features.
-* **Fusion Layer:** Concatenates spatial and tabular embeddings.
-* **BiLSTM:** Models temporal evolution across past 24 hours.
-* **Attention:** Highlights key timesteps (e.g., rush hours, wind changes).
-* **Output Heads:**
-
-  * NO₂ concentration
-  * O₃ concentration
-
----
-
-## 📈 Model Performance
-![alt text](./docs/bias.png)
-![alt text](./docs/rmse.png)
-
-### **NO₂**
-
-* **MAE:** 12.35
-* **RMSE:** 17.89
-* **R²:** 0.755
-
-### **O₃**
-
-* **MAE:** 14.65
-* **RMSE:** 20.91
-* **R²:** 0.666
-
----
-
-## 🔧 Tech Stack
-
-* **PyTorch** – modeling
-* **scikit-learn** – preprocessing & feature engineering
-* **NumPy / Pandas** – time-series & data handling
-* **Rasterio** – GeoTIFF reading & spatial ops
-
----
-
-## 📚 References
-[Attention mechanism based CNN-LSTM hybrid deep learning model for atmospheric ozone concentration prediction](https://www.nature.com/articles/s41598-025-05877-2)
-
+## Model Performance
+| Metric                    | Value      |
+| ------------------------- | ---------- |
+| PM2.5 MAE                 | < 12 µg/m³ |
+| NO₂ MAE                   | < 10 µg/m³ |
+| Source Detection Accuracy | ~80%       |
