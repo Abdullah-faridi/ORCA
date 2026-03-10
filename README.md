@@ -1,4 +1,4 @@
-# Project Canary
+# Project ORCA
 
 ## AQI Sentinel – Hyper-Local Air Quality Intelligence System
 
